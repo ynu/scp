@@ -1,69 +1,78 @@
-#!/usr/bin/env node
+import process from 'node:process';
+import axios from 'axios';
+import clusters from './clusters.js';
+import servers from './servers.js';
+import project from './projects.js';
+import cache from "memory-cache";
+import Debug from "debug";
+const debug = Debug('webscp:debug');
+const warn = Debug('webscp:warn');
 
-import process from "process";
-import { program } from "commander";
-import chalk from "chalk";
-import inquirer from "inquirer";
-import ora from "ora";
-import figlet from "figlet";
-import { say_hello, times_str } from "./utli.js";
 
-/**
- * show the logo
- * @returns {void}
- */
-function show_logo() {
-  console.log(
-    chalk.yellow(figlet.textSync(say_hello(), { horizontalLayout: "full" })),
-  );
+export class scpError extends Error {
+  constructor (code, message) {
+    super(message);
+    this.message = message;
+    this.code = code;
+    this.data = null;
+  }
 }
 
 /**
- * Process the choice according to the user's choice
- * @param {{ choice: string }} result - the user's choice
- * @returns {void}
+ * 获取token。
+ * @param {Object} options 其他参数
+ *    - username scp系统用户名
+ *    - password scp系统密码(加密后的密码)
+ * @returns 获得的Token
  */
-function process_choice(result) {
-  const spinner = ora(`Doing ${result.choice}...`).start(); // 启动旋转器动画
-  setTimeout(() => {
-    spinner.succeed(chalk.green("Done!")); // 3秒后完成，显示成功消息
-  }, 3000);
-}
-
-/**
- * fetch data from the url
- * @param {string} url - the url to fetch data
- * @returns {Promise<Object>} the result
- */
-async function fetch_demo(url = "https://api.github.com/users/github") {
-  const spinner = ora("Fetching data...").start();
-  const response = await fetch(url);
-  const data = await response.json();
-  spinner.succeed("Data fetched successfully!");
-  return data;
-}
-
-/**
- * main function of the program
- * @returns {Promise<void>} the result
- */
-async function main() {
-  show_logo();
-  program.version("1.0.0").description("My Node CLI");
-  program.action(async () => {
-    const result = await inquirer.prompt([
-      {
-        type: "list",
-        name: "choice",
-        message: "Choose an option:",
-        choices: ["Option 1", "Option 2", "Option 3"],
+export const getToken = async (options = {}) => {
+  const host = options.host || process.env.SCP_HOST;
+  const username = options.username || process.env.SCP_USERNAME;
+  const password = options.password || process.env.SCP_PASSWORD;
+  if (!username) {
+    throw new scpError(-1, '必须的参数username或环境变量SCP_USERNAME(scp用户名)未设置.')
+  }
+  if (!password) {
+    throw new scpError(-1, '必须的参数password未传入,或未设置环境变量SCP_PASSWORD')
+  }
+  const tokenCacheKey = `scp-token::${username}::${password}`;
+  let token = cache.get(tokenCacheKey);
+  if (token) {
+    debug(`从cache获取token(password:${password})`);
+    return token;
+  } else {
+    const res = await axios.post(`${host}/janus/authenticate`, {
+        "auth": {
+          "passwordCredentials": {
+            "username": username,
+            "password": password
+          }
+        }
+      }, {
+      headers: {
+        'Content-Type': 'application/json',
       },
-    ]);
-    process_choice(result);
-  });
-  program.parse(process.argv);
-  console.info(`invoke times_str: ${times_str(3, "hello")}`);
-  console.info(`fetch some sample data: ${await fetch_demo()}`);
+    }).catch(e => {
+      console.log(e)
+    });
+    if (res.data.code === 0) {
+      debug(`获取token成功::${res.data.data.access.token.id}`);
+      // 过期时间为1800s, 过期时间减去30s, 防止token失效
+      cache.put(tokenCacheKey, res.data.data.access.token.id, (1800*1000-30*1000));
+      // console.log(cache.get(tokenCacheKey))
+      return res.data.data.access.token.id;
+    }
+    warn('login出错:', res);
+    throw new scpError(res.data.code, res.data.message);
+  }
 }
 
-main();
+export const Clusters = clusters;
+export const Servers = servers;
+export const Projects = project;
+export default {
+  getToken,
+  Clusters,
+  Servers,
+  Projects,
+};
