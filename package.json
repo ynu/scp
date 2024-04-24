@@ -1,7 +1,7 @@
 {
-  "name": "nodejs-sandbox",
+  "name": "node-scp",
   "version": "1.0.0",
-  "description": "",
+  "description": "[![Node.js CI](https://github.com/liudonghua123/esm-template/actions/workflows/node.js.yml/badge.svg)](https://github.com/liudonghua123/esm-template/actions/workflows/node.js.yml)",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
@@ -40,5 +40,8 @@
     "figlet": "^1.7.0",
     "inquirer": "^9.2.15",
     "ora": "^8.0.1"
+  },
+  "directories": {
+    "test": "test"
   }
 }
