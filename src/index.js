@@ -5,6 +5,7 @@ import servers from './servers.js';
 import project from './projects.js';
 import cache from "memory-cache";
 import Debug from "debug";
+import {encryptWithModulus} from "./util.js";
 const debug = Debug('webscp:debug');
 const warn = Debug('webscp:warn');
 
@@ -35,8 +36,13 @@ export const getToken = async (options = {}) => {
   if (!password) {
     throw new scpError(-1, '必须的参数password未传入,或未设置环境变量SCP_PASSWORD')
   }
+
   const tokenCacheKey = `scp-token::${username}::${password}`;
   let token = cache.get(tokenCacheKey);
+  let password_encrypt = ""
+  await encryptWithModulus(password, options).then(res => {
+    password_encrypt = res
+  })
   if (token) {
     debug(`从cache获取token(password:${password})`);
     return token;
@@ -45,7 +51,8 @@ export const getToken = async (options = {}) => {
         "auth": {
           "passwordCredentials": {
             "username": username,
-            "password": password
+            // 调用加密方法获得加密后的密码
+            "password": password_encrypt
           }
         }
       }, {

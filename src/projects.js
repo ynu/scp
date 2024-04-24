@@ -2,7 +2,7 @@ import process from 'node:process';
 import axios from 'axios';
 import Debug from 'debug';
 import {getToken} from "./index.js";
-import {filterNullParams} from "./util.js";
+import {filterNullParams, encryptWithModulus} from "./util.js";
 
 const debug = Debug('scp::debug');
 
@@ -72,6 +72,11 @@ export const detail = async (project_id, options = {}) => {
  * @returns
  */
 export const create = async (project, options = {}) => {
+  let password_encrypt = ""
+  await encryptWithModulus(project.project_admin.password, options).then(res => {
+    password_encrypt = res
+  })
+  project.project_admin.password = password_encrypt
   options.host = options.host || process.env.SCP_HOST;
   const token = await getToken(options);
   debug(`${options.host}/janus/20180725/projects`);

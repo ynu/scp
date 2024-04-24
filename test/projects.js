@@ -35,7 +35,7 @@ describe('租户管理', function() {
         "user_name": "yy_admin",
         "mail": "aaa@123.com",
         "phone": "13412345678",
-        "password": "a571469106701ca747cb3762b99dd756cb9c66f294e8fb942b40032016851a3635de09aff688db7fc8853db4850e522ff34fe7dd51b466bec7b11c4c9083f67c36249c66b885752cf3605dcdbb902a18d7d4c4fec5bf705c728b1545cfbf6dd71575339fcd02942ded7f1bbecc05f0ee82669be0517962aa01dda9e9d26f46674e3f89b1ded7fc97837e970b916e956124428266f617f9ac500298961e81d28ccdceb4553069de3c9c8f80df80068143d8d0ee71ec238cf0f1db471bd661721422c9f4c249b2503da25d2ec4eb575395646cbadd8e6509224ba11eb438e758e2aded9a8a5edf161f21e9717f965b678b7792e941abca7c548e1cc47d39a1bfa9"
+        "password": ""
       }
     }
     const res = await Projects.create(project,{ SCP_HOST, SCP_USERNAME, SCP_PASSWORD });
