@@ -1,6 +1,6 @@
 {
-  "name": "node-scp",
-  "version": "1.0.0",
+  "name": "scp-api",
+  "version": "1.1.0",
   "description": "[![Node.js CI](https://github.com/liudonghua123/esm-template/actions/workflows/node.js.yml/badge.svg)](https://github.com/liudonghua123/esm-template/actions/workflows/node.js.yml)",
   "type": "module",
   "main": "src/index.js",
